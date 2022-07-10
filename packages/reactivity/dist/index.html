@@ -1,15 +1,30 @@
 <!DOCTYPE html>
 <html lang="zh-cn">
+
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document</title>
 </head>
+
 <body>
-    <script src="../../../node_modules/@vue/reactivity/dist/reactivity.global.js"></script>
-    <div id="app"></div>
-    <script>
+  <!-- <script src="../../../node_modules/@vue/reactivity/dist/reactivity.global.js"></script> -->
+  <script src="./reactivity.global.js"></script>
+  <div id="app"></div>
+  <script>
+    const { effect, reactive } = VueReactivity
+    const target = {
+      name: '瑾知',
+      age: 16,
+    }
+    const proxy = reactive(target)
+    const proxy2 = reactive(target)
+    const proxy3 = reactive(proxy)
+    console.log(proxy, proxy2, proxy3)
+    console.log(proxy === proxy3)
+  </script>
+  <!-- <script>
 
       //effect 副作用函数，如果此函数依赖的数据发生变化了,会重新执行
       //reactive 将数据变成响应式 Proxy
@@ -24,7 +39,8 @@
       setTimeout(()=>{
         state.age = 18
       },1000)
-    </script>
-  
+    </script> -->
+
 </body>
+
 </html>
