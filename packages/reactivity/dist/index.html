@@ -19,27 +19,18 @@
       age: 16,
     }
     const proxy = reactive(target)
-    const proxy2 = reactive(target)
-    const proxy3 = reactive(proxy)
-    console.log(proxy, proxy2, proxy3)
-    console.log(proxy === proxy3)
-  </script>
-  <!-- <script>
-
-      //effect 副作用函数，如果此函数依赖的数据发生变化了,会重新执行
-      //reactive 将数据变成响应式 Proxy
-      const {effect,reactive} = VueReactivity
-      const state = reactive({name:'瑾知',age:16});
-
-      effect(()=>{ //effect函数会默认执行一次，对响应式数据取值（取值的过程会依赖当前的effect）
-        app.innerHTML = `${state.name}今年${state.age}岁了`
-      })
-
-      //1s后会重新执行effect
-      setTimeout(()=>{
-        state.age = 18
+    // const proxy2 = reactive(target)
+    // const proxy3 = reactive(proxy)
+    console.log(proxy)
+    // console.log(proxy === proxy3)
+    effect(() => { //effect函数会默认执行一次，对响应式数据取值（取值的过程会依赖当前的effect）
+      app.innerHTML = `${proxy.name}今年${proxy.age}岁了`
+      proxy.age++
+    })
+    setTimeout(()=>{
+      proxy.age = 18
       },1000)
-    </script> -->
+  </script>
 
 </body>
 

@@ -29,15 +29,73 @@ var VueReactivity = (() => {
     return typeof value === "object" && value !== null;
   };
 
+  // packages/reactivity/src/effect.ts
+  var activeEffect;
+  var ReactiveEffect = class {
+    constructor(fn) {
+      this.fn = fn;
+      this.active = true;
+      this.parent = null;
+      this.deps = [];
+    }
+    run() {
+      if (!this.active)
+        this.fn();
+      try {
+        this.parent = activeEffect;
+        activeEffect = this;
+        return this.fn();
+      } finally {
+        activeEffect = this.parent;
+      }
+    }
+  };
+  function effect(fn) {
+    const _effect = new ReactiveEffect(fn);
+    _effect.run();
+  }
+  var targetMap = /* @__PURE__ */ new WeakMap();
+  function track(target, type, key) {
+    if (!activeEffect)
+      return;
+    let depsMap = targetMap.get(target);
+    if (!depsMap)
+      targetMap.set(target, depsMap = /* @__PURE__ */ new Map());
+    let dep = depsMap.get(key);
+    if (!dep)
+      depsMap.set(key, dep = /* @__PURE__ */ new Set());
+    const shouldTrack = !dep.has(activeEffect);
+    if (shouldTrack) {
+      dep.add(activeEffect);
+      activeEffect.deps.push(dep);
+    }
+    console.log(targetMap);
+  }
+  function trigger(target, type, key, value, oldValue) {
+    const depsMap = targetMap.get(target);
+    if (!depsMap)
+      return;
+    const deps = depsMap.get(key);
+    deps && deps.forEach((effect2) => {
+      if (effect2 !== activeEffect)
+        effect2.run();
+    });
+  }
+
   // packages/reactivity/src/baseHandler.ts
   var mutableHandlers = {
     get(target, key, receiver) {
       if (key === "__v_isReactive" /* IS_REACTIVE */)
         return true;
+      track(target, "get", key);
       return Reflect.get(target, key, receiver);
     },
     set(target, key, value, receiver) {
-      return Reflect.set(target, key, value, receiver);
+      const oldValue = target[key];
+      const result = Reflect.set(target, key, value, receiver);
+      if (oldValue !== value)
+        trigger(target, "set", key, value, oldValue);
+      return result;
     }
   };
 
@@ -54,29 +112,6 @@ var VueReactivity = (() => {
     const proxy = new Proxy(target, mutableHandlers);
     reactiveMap.set(target, proxy);
     return proxy;
-  }
-
-  // packages/reactivity/src/effect.ts
-  var activeEffect;
-  var ReactiveEffect = class {
-    constructor(fn) {
-      this.fn = fn;
-      this.active = true;
-    }
-    run() {
-      if (!this.active)
-        this.fn();
-      try {
-        activeEffect = this;
-        return this.fn();
-      } finally {
-        activeEffect = void 0;
-      }
-    }
-  };
-  function effect(fn) {
-    const _effect = new ReactiveEffect(fn);
-    _effect.run();
   }
   return __toCommonJS(src_exports);
 })();
