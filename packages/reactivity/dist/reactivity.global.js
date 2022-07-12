@@ -25,12 +25,18 @@ var VueReactivity = (() => {
   });
 
   // packages/shared/src/index.ts
-  var isObject = (value) => {
-    return typeof value === "object" && value !== null;
-  };
+  var isObject = (value) => typeof value === "object" && value !== null;
+  var isArray = Array.isArray;
 
   // packages/reactivity/src/effect.ts
   var activeEffect;
+  function cleanupEffect(effect2) {
+    const { deps } = effect2;
+    deps.forEach((dep) => {
+      dep.delete(effect2);
+    });
+    effect2.deps.length = 0;
+  }
   var ReactiveEffect = class {
     constructor(fn) {
       this.fn = fn;
@@ -44,15 +50,25 @@ var VueReactivity = (() => {
       try {
         this.parent = activeEffect;
         activeEffect = this;
+        cleanupEffect(this);
         return this.fn();
       } finally {
         activeEffect = this.parent;
+      }
+    }
+    stop() {
+      if (this.active) {
+        this.active = false;
+        cleanupEffect(this);
       }
     }
   };
   function effect(fn) {
     const _effect = new ReactiveEffect(fn);
     _effect.run();
+    const runner = _effect.run.bind(_effect);
+    runner.effect = _effect;
+    return runner;
   }
   var targetMap = /* @__PURE__ */ new WeakMap();
   function track(target, type, key) {
@@ -69,17 +85,19 @@ var VueReactivity = (() => {
       dep.add(activeEffect);
       activeEffect.deps.push(dep);
     }
-    console.log(targetMap);
   }
   function trigger(target, type, key, value, oldValue) {
     const depsMap = targetMap.get(target);
     if (!depsMap)
       return;
-    const deps = depsMap.get(key);
-    deps && deps.forEach((effect2) => {
-      if (effect2 !== activeEffect)
-        effect2.run();
-    });
+    let deps = depsMap.get(key);
+    if (deps) {
+      deps = new Set(deps);
+      deps.forEach((effect2) => {
+        if (effect2 !== activeEffect)
+          effect2.run();
+      });
+    }
   }
 
   // packages/reactivity/src/baseHandler.ts

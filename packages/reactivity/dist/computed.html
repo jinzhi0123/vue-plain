@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <script src="../../../node_modules/@vue/reactivity/dist/reactivity.global.js"></script>
+  <!-- <script src="./reactivity.global.js"></script> -->
+  <div id="app"></div>
+  <script>
+    const { computed, effect } = VueReactivity
+    const state = {
+      firstName: '知',
+      lastName: '瑾'
+    }
+    // 选项式 传入getter和setter
+    const fullName = computed({
+      get() { // defineProperty中的getter
+        console.log('runner')
+        return `${state.firstName} ${state.lastName}`
+      },
+      set(newValue) { // defineProperty中的setter
+        console.log(newValue)
+      }
+    })
+    // 函数式 传入getter
+    const fullName2 = computed(()=>{
+      console.log('runner')
+      return `${state.firstName} ${state.lastName}`
+    })
+    
+    effect(() => {
+      app.innerHtml = `${fullName.value} ${fullName2.value}`
+    })
+  </script>
+
+</body>
+
+</html>

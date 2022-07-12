@@ -9,27 +9,39 @@
 </head>
 
 <body>
-  <!-- <script src="../../../node_modules/@vue/reactivity/dist/reactivity.global.js"></script> -->
-  <script src="./reactivity.global.js"></script>
+  <script src="../../../node_modules/@vue/reactivity/dist/reactivity.global.js"></script>
+  <!-- <script src="./reactivity.global.js"></script> -->
   <div id="app"></div>
   <script>
+    let waiting = false
     const { effect, reactive } = VueReactivity
     const target = {
       name: '瑾知',
       age: 16,
+      flag: true
     }
     const proxy = reactive(target)
-    // const proxy2 = reactive(target)
-    // const proxy3 = reactive(proxy)
-    console.log(proxy)
-    // console.log(proxy === proxy3)
-    effect(() => { //effect函数会默认执行一次，对响应式数据取值（取值的过程会依赖当前的effect）
-      app.innerHTML = `${proxy.name}今年${proxy.age}岁了`
-      proxy.age++
+    const runner = effect(() => {
+      console.log('render')
+      app.innerHTML = `${proxy.name}: ${proxy.age}`
+    }, {
+      scheduler() {
+        console.log('scheduler')
+        if (!waiting) {
+          waiting = true
+          setTimeout(() => {
+            runner()
+            waiting = false
+          }, 1000)
+        }
+      }
     })
-    setTimeout(()=>{
-      proxy.age = 18
-      },1000)
+    // runner.effect.stop()
+    proxy.age = 17
+    proxy.age = 18
+    // setTimeout(() => {
+    //   runner()
+    // }, 2000)
   </script>
 
 </body>
