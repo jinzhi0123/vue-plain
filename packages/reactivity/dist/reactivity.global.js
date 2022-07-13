@@ -20,12 +20,14 @@ var VueReactivity = (() => {
   // packages/reactivity/src/index.ts
   var src_exports = {};
   __export(src_exports, {
+    computed: () => computed,
     effect: () => effect,
     reactive: () => reactive
   });
 
   // packages/shared/src/index.ts
   var isObject = (value) => typeof value === "object" && value !== null;
+  var isFunction = (value) => typeof value === "function";
   var isArray = Array.isArray;
 
   // packages/reactivity/src/effect.ts
@@ -81,6 +83,9 @@ var VueReactivity = (() => {
     let dep = depsMap.get(key);
     if (!dep)
       depsMap.set(key, dep = /* @__PURE__ */ new Set());
+    trackEffects(dep);
+  }
+  function trackEffects(dep) {
     const shouldTrack = !dep.has(activeEffect);
     if (shouldTrack) {
       dep.add(activeEffect);
@@ -91,18 +96,20 @@ var VueReactivity = (() => {
     const depsMap = targetMap.get(target);
     if (!depsMap)
       return;
-    let dep = depsMap.get(key);
-    if (dep) {
-      dep = new Set(dep);
-      dep.forEach((effect2) => {
-        if (effect2 !== activeEffect) {
-          if (effect2.scheduler)
-            effect2.scheduler();
-          else
-            effect2.run();
-        }
-      });
-    }
+    const dep = depsMap.get(key);
+    if (dep)
+      triggerEffects(dep);
+  }
+  function triggerEffects(dep) {
+    dep = new Set(dep);
+    dep.forEach((effect2) => {
+      if (effect2 !== activeEffect) {
+        if (effect2.scheduler)
+          effect2.scheduler();
+        else
+          effect2.run();
+      }
+    });
   }
 
   // packages/reactivity/src/baseHandler.ts
@@ -139,6 +146,49 @@ var VueReactivity = (() => {
     reactiveMap.set(target, proxy);
     return proxy;
   }
+
+  // packages/reactivity/src/computed.ts
+  var ComputedRefImpl = class {
+    constructor(getter, setter) {
+      this.setter = setter;
+      this._dirty = true;
+      this.__v_isReadonly = true;
+      this.__v_isRef = true;
+      this.dep = /* @__PURE__ */ new Set();
+      this.effect = new ReactiveEffect(getter, () => {
+        if (!this._dirty) {
+          this._dirty = true;
+          triggerEffects(this.dep);
+        }
+      });
+    }
+    get value() {
+      if (this._dirty) {
+        trackEffects(this.dep);
+        this._dirty = false;
+        this._value = this.effect.run();
+      }
+      return this._value;
+    }
+    set value(newValue) {
+      this.setter(newValue);
+    }
+  };
+  var computed = (getterOrOptions) => {
+    const onlyGetter = isFunction(getterOrOptions);
+    let getter;
+    let setter;
+    if (onlyGetter) {
+      getter = getterOrOptions;
+      setter = () => {
+        console.warn("no set");
+      };
+    } else {
+      getter = getterOrOptions.get;
+      setter = getterOrOptions.set;
+    }
+    return new ComputedRefImpl(getter, setter);
+  };
   return __toCommonJS(src_exports);
 })();
 //# sourceMappingURL=reactivity.global.js.map

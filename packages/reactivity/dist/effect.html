@@ -21,20 +21,23 @@
       flag: true
     }
     const proxy = reactive(target)
-    const runner = effect(() => {
-      console.log('render')
-      app.innerHTML = `${proxy.name}: ${proxy.age}`
-    }, {
-      scheduler() {
-        console.log('scheduler')
-        if (!waiting) {
-          waiting = true
-          setTimeout(() => {
-            runner()
-            waiting = false
-          }, 1000)
-        }
-      }
+    // const runner = effect(() => {
+    //   console.log('render')
+    //   app.innerHTML = `${proxy.name}: ${proxy.age}`
+    // }, {
+    //   scheduler() {
+    //     console.log('scheduler')
+    //     if (!waiting) {
+    //       waiting = true
+    //       setTimeout(() => {
+    //         runner()
+    //         waiting = false
+    //       }, 1000)
+    //     }
+    //   }
+    // })
+    effect(()=>{
+      effect(()=>{app.innerHTML = `${proxy.name}: ${proxy.age}`})
     })
     // runner.effect.stop()
     proxy.age = 17

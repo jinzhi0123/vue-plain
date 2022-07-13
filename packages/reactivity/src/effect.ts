@@ -58,8 +58,9 @@ export function effect(fn, options: any = {}) {
   return runner // 将runner函数返回
 }
 
-// 依赖收集
 const targetMap = new WeakMap()
+
+// 依赖收集
 export function track(target, type, key) {
   if (!activeEffect)
     return
@@ -69,6 +70,10 @@ export function track(target, type, key) {
   let dep = depsMap.get(key)
   if (!dep)
     depsMap.set(key, (dep = new Set()))
+  trackEffects(dep)
+}
+
+export function trackEffects(dep) {
   const shouldTrack = !dep.has(activeEffect)
   if (shouldTrack) {
     dep.add(activeEffect)
@@ -77,21 +82,25 @@ export function track(target, type, key) {
   }
 }
 
+// 更新渲染触发函数
 export function trigger(target, type, key, value, oldValue) {
   const depsMap = targetMap.get(target)
   if (!depsMap) // 该target不在模板中使用
     return
-  let dep = depsMap.get(key) // 找到对应的effect
-  if (dep) {
-    dep = new Set(dep)
-    dep.forEach((effect) => {
-      // 如果是自己执行自己，就什么都不做
-      if (effect !== activeEffect) {
-        if (effect.scheduler)
+  const dep = depsMap.get(key) // 找到对应的effect
+  if (dep)
+    triggerEffects(dep)
+}
+
+export function triggerEffects(dep) {
+  dep = new Set(dep)
+  dep.forEach((effect) => {
+    // 如果是自己执行自己，就什么都不做
+    if (effect !== activeEffect) {
+      if (effect.scheduler)
         // 如果有调度器，则调度器执行
-          effect.scheduler()
-        else effect.run()
-      }
-    })
-  }
+        effect.scheduler()
+      else effect.run()
+    }
+  })
 }

@@ -13,11 +13,11 @@
   <!-- <script src="./reactivity.global.js"></script> -->
   <div id="app"></div>
   <script>
-    const { computed, effect } = VueReactivity
-    const state = {
+    const { computed, effect, reactive } = VueReactivity
+    const state = reactive({
       firstName: '知',
       lastName: '瑾'
-    }
+    })
     // 选项式 传入getter和setter
     const fullName = computed({
       get() { // defineProperty中的getter
@@ -29,14 +29,16 @@
       }
     })
     // 函数式 传入getter
-    const fullName2 = computed(()=>{
+    const fullName2 = computed(() => {
       console.log('runner')
       return `${state.firstName} ${state.lastName}`
     })
-    
+
     effect(() => {
-      app.innerHtml = `${fullName.value} ${fullName2.value}`
+      app.innerHTML = `${fullName.value} ${fullName2.value}`
     })
+    // state.firstName = 'a'
+    state.firstName = 'b'
   </script>
 
 </body>
