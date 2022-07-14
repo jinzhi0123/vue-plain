@@ -4,6 +4,10 @@ import { ReactiveFlags, mutableHandlers } from './baseHandler'
 // weakMap的key只能是对象，没有内存泄漏风险，key是null的话会自动清除
 const reactiveMap = new WeakMap()
 
+export function isReactive(value) {
+  return !!(value && value[ReactiveFlags.IS_REACTIVE])
+}
+
 export function reactive(target) {
   if (!isObject(target))
     return

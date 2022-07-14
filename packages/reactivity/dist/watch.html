@@ -14,12 +14,39 @@
   <div id="app"></div>
   <script>
     const { watch, reactive, effect } = Vue
-    const state = {
+    const state = reactive({
       name: '瑾知',
-      age: '16'
+      age: 16,
+      feature: {
+        favorite: '小裙子'
+      }
+    })
+    let count = 0
+    const request = count => {
+      return new Promise(resolve => {
+        setTimeout(() => {
+          resolve(`小鲨鱼起尝试第${count}次起床`)
+        }, (3-count)*1000)
+      })
     }
-  </script>
 
+    watch(() => state.feature.favorite, async(newVal, oldVal,onCleanup) => {
+      count+=1
+      let clear = false
+      onCleanup(() => {
+        console.log('onCleanup')
+        clear = true})
+      let result = await request(count)
+      if (!clear){
+        console.log(result)
+        document.getElementById('app').innerHTML = result
+      }
+    },{flush:'sync'})
+
+    state.feature.favorite = '小鲨鱼'
+    state.feature.favorite = '大裙子'
+    state.feature.favorite = '小裙子'
+  </script>
 </body>
 
 </html>
