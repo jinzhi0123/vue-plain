@@ -208,6 +208,7 @@ var VueReactivity = (() => {
   function watch(source, cb) {
     let getter;
     let oldValue;
+    let cleanup;
     if (isReactive(source)) {
       getter = () => traversal(source);
     } else if (isFunction(source)) {
@@ -215,9 +216,12 @@ var VueReactivity = (() => {
     } else {
       return;
     }
+    const onCleanup = (fn) => cleanup = fn;
     const job = () => {
+      if (cleanup)
+        cleanup();
       const newValue = effect2.run();
-      cb(newValue, oldValue);
+      cb(newValue, oldValue, onCleanup);
       oldValue = newValue;
     };
     const effect2 = new ReactiveEffect(getter, job);

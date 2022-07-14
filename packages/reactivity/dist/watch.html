@@ -9,11 +9,11 @@
 </head>
 
 <body>
-  <script src="../../../node_modules/vue/dist/vue.global.js"></script>
-  <!-- <script src="./reactivity.global.js"></script> -->
+  <!-- <script src="../../../node_modules/vue/dist/vue.global.js"></script> -->
+  <script src="./reactivity.global.js"></script>
   <div id="app"></div>
   <script>
-    const { watch, reactive, effect } = Vue
+    const { watch, reactive, effect } = VueReactivity
     const state = reactive({
       name: '瑾知',
       age: 16,
@@ -35,13 +35,14 @@
       let clear = false
       onCleanup(() => {
         console.log('onCleanup')
-        clear = true})
+        clear = true
+      })
       let result = await request(count)
       if (!clear){
         console.log(result)
         document.getElementById('app').innerHTML = result
       }
-    },{flush:'sync'})
+    })
 
     state.feature.favorite = '小鲨鱼'
     state.feature.favorite = '大裙子'

@@ -35,12 +35,12 @@ export function watch(source, cb) {
   else {
     return
   }
-  const Oncleanup = fn => cleanup = fn // 保存用户的函数
+  const onCleanup = fn => cleanup = fn // 保存用户的函数
   const job = () => {
     if (cleanup)
       cleanup() // 下一次watch触发这一次的cleanup
     const newValue = effect.run()
-    cb(newValue, oldValue, Oncleanup)
+    cb(newValue, oldValue, onCleanup)
     oldValue = newValue
   }
   const effect = new ReactiveEffect(getter, job)
